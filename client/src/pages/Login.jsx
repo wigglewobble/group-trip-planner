@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import { Link,useNavigate } from 'react-router-dom'
+import { Link, useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const {login}=useAuth()
-  const navigate=useNavigate()
+
+  const { login, isLoggedIn, loading: authLoading } = useAuth()
+  const navigate = useNavigate()
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -16,10 +18,9 @@ const Login = () => {
     e.preventDefault()
     setError('')
     setLoading(true)
-
     try {
-     await login(form.email,form.password)
-     navigate('/')
+      await login(form.email, form.password)
+      navigate('/')
     } catch (err) {
       setError(err.message || 'Invalid email or password')
     } finally {
@@ -27,6 +28,9 @@ const Login = () => {
     }
   }
 
+  if (!authLoading && isLoggedIn) {
+    return <Navigate to="/" replace />
+  }
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">

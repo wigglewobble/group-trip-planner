@@ -2,7 +2,22 @@ import { Link } from 'react-router-dom'
 import StatusPill from './StatusPill'
 import MemberAvatars from './MemberAvatars'
 
+const formatDate = (dateStr) => {
+  return new Date(dateStr).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  })
+}
+
 const TripCard = ({ trip }) => {
+  const members = trip.members?.map(m => ({
+    id: m.userId,
+    name: m.user?.name || 'Unknown'
+  })) || []
+
+  const status = trip.status?.toLowerCase() || 'planning'
+
   return (
     <Link
       to={`/trip/${trip.id}`}
@@ -15,19 +30,19 @@ const TripCard = ({ trip }) => {
           </h2>
           <p className="text-sm text-gray-500">{trip.destination}</p>
         </div>
-        <StatusPill status={trip.status} />
+        <StatusPill status={status} />
       </div>
 
       <div className="flex items-center gap-2 mb-4 text-sm text-gray-500">
-        <span>{trip.startDate}</span>
+        <span>{formatDate(trip.startDate)}</span>
         <span>→</span>
-        <span>{trip.endDate}</span>
+        <span>{formatDate(trip.endDate)}</span>
       </div>
 
       <div className="flex items-center justify-between">
-        <MemberAvatars members={trip.members} />
+        <MemberAvatars members={members} />
         <span className="text-xs text-gray-400">
-          {trip.members.length} members
+          {members.length} member{members.length !== 1 ? 's' : ''}
         </span>
       </div>
     </Link>

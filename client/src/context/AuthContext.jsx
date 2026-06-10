@@ -22,7 +22,33 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe()
   }, [])
 
+  const syncUserToBackend = async (supabaseUser, name) => {
+    
+
+    const session = await supabase.auth.getSession()
+    
+    try {
+      const response = await fetch('http://localhost:3001/api/users/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          id: supabaseUser.id,
+          email: supabaseUser.email,
+          name: name || supabaseUser.user_metadata?.name || 'User'
+        })
+      })
+
+      
+
+    } catch (err) {
+      console.error("User sync error:", err)
+    }
+  }
   const signup = async (email, password, name) => {
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -30,7 +56,12 @@ export const AuthProvider = ({ children }) => {
         data: { name }
       }
     })
+    
     if (error) throw error
+    if (data.user) {
+      
+      await syncUserToBackend(data.user, name)
+    }
     return data
   }
 

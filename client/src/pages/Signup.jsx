@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link,useNavigate } from 'react-router-dom'
+import { Link, useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 const Signup = () => {
     const [form, setForm] = useState({
@@ -10,9 +10,8 @@ const Signup = () => {
     })
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
-    const { signup} =useAuth()
-    const navigate= useNavigate()
-
+    const { signup, isLoggedIn, loading: authLoading } = useAuth()
+    const navigate = useNavigate()
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value })
     }
@@ -42,13 +41,16 @@ const Signup = () => {
         setLoading(true)
 
         try {
-            await signup(form.email,form.password,form.name)
+            await signup(form.email, form.password, form.name)
             navigate('/')
         } catch (err) {
             setError(err.message || 'Something went wrong. Please try again.')
         } finally {
             setLoading(false)
         }
+    }
+    if (!authLoading && isLoggedIn) {
+        return <Navigate to="/" replace />
     }
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
