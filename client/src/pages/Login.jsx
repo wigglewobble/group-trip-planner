@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-
+import { Link,useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const {login}=useAuth()
+  const navigate=useNavigate()
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -16,10 +18,10 @@ const Login = () => {
     setLoading(true)
 
     try {
-      // auth logic goes here in Phase 2
-      console.log('Login submitted:', form)
+     await login(form.email,form.password)
+     navigate('/')
     } catch (err) {
-      setError('Invalid email or password')
+      setError(err.message || 'Invalid email or password')
     } finally {
       setLoading(false)
     }

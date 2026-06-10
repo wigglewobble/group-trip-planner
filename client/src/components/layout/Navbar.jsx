@@ -1,10 +1,15 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 const Navbar = () => {
   const location = useLocation()
-  const { user, isLoggedIn } = useAuth()
+  const Navigate = useNavigate()
+  const { user, isLoggedIn, logout } = useAuth()
 
+  const handleLogout = async () => {
+    await logout()
+    navigate('/login')
+  }
   const links = [
     { label: 'Dashboard', path: '/' },
   ]
@@ -20,11 +25,10 @@ const Navbar = () => {
           <Link
             key={link.path}
             to={link.path}
-            className={`text-sm ${
-              location.pathname === link.path
+            className={`text-sm ${location.pathname === link.path
                 ? 'text-gray-900 font-medium'
                 : 'text-gray-500 hover:text-gray-800'
-            }`}
+              }`}
           >
             {link.label}
           </Link>
@@ -33,8 +37,16 @@ const Navbar = () => {
 
       <div className="flex items-center gap-3">
         {isLoggedIn ? (
-          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-600">
-            {user.name.charAt(0).toUpperCase()}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-600">
+              {user.user_metadata?.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-gray-500 hover:text-gray-800"
+            >
+              Sign out
+            </button>
           </div>
         ) : (
           <Link

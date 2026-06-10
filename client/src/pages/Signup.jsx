@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-
+import { Link,useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 const Signup = () => {
     const [form, setForm] = useState({
         name: '',
@@ -10,6 +10,8 @@ const Signup = () => {
     })
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
+    const { signup} =useAuth()
+    const navigate= useNavigate()
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value })
@@ -40,9 +42,10 @@ const Signup = () => {
         setLoading(true)
 
         try {
-            console.log('Signup submitted:', form)
+            await signup(form.email,form.password,form.name)
+            navigate('/')
         } catch (err) {
-            setError('Something went wrong. Please try again.')
+            setError(err.message || 'Something went wrong. Please try again.')
         } finally {
             setLoading(false)
         }
