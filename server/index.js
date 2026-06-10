@@ -2,13 +2,13 @@ require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const prisma = require('./src/db')
-
+const usersRouter=require('./src/routes/users')
 
 const app = express()
 
 app.use(cors())
 app.use(express.json())
-
+app.use('/api/users',usersRouter)
 app.get('/health', async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`
