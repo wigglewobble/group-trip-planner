@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { tripsApi } from '../services/api'
 import { useAuth } from '../context/AuthContext'
-import MemberAvatars from '../components/ui/MemberAvatars'
 import StatusPill from '../components/ui/StatusPill'
 import InviteMemberModal from '../components/ui/InviteMemberModal'
 
@@ -69,10 +68,12 @@ const TripPage = () => {
     }
 
     const isAdmin = trip.adminId === user?.id
-    const members = trip.members?.map(m => ({
-        id: m.userId,
-        name: m.user?.name || 'Unknown'
-    })) || []
+    const members =
+        trip.members?.map(m => ({
+            id: m.userId,
+            name: m.user?.name || 'Unknown'
+        })) || []
+
     const status = trip.status?.toLowerCase() || 'planning'
 
     return (
@@ -87,26 +88,37 @@ const TripPage = () => {
             <div className="flex items-start justify-between gap-4 mb-6">
                 <div>
                     <div className="flex items-center gap-3 mb-1">
-                        <h1 className="text-xl font-medium text-gray-900">{trip.name}</h1>
+                        <h1 className="text-xl font-medium text-gray-900">
+                            {trip.name}
+                        </h1>
                         <StatusPill status={status} />
                     </div>
-                    <p className="text-sm text-gray-500">{trip.destination}</p>
+
+                    <p className="text-sm text-gray-500">
+                        {trip.destination}
+                    </p>
+
                     <p className="text-sm text-gray-400 mt-1">
-                        {formatDate(trip.startDate)} → {formatDate(trip.endDate)}
+                        {formatDate(trip.startDate)} →{' '}
+                        {formatDate(trip.endDate)}
                     </p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Members */}
                 <div className="md:col-span-1">
                     <div className="bg-white border border-gray-200 rounded-xl p-5">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-sm font-medium text-gray-900">
                                 Members ({members.length})
                             </h2>
+
                             {isAdmin && (
                                 <button
-                                    onClick={() => setShowInviteModal(true)}
+                                    onClick={() =>
+                                        setShowInviteModal(true)
+                                    }
                                     className="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1"
                                 >
                                     + Invite
@@ -115,22 +127,34 @@ const TripPage = () => {
                         </div>
 
                         <div className="flex flex-col gap-3">
-                            {trip.members.map(member => (
+                            {trip.members?.map(member => (
                                 <div
                                     key={member.userId}
                                     className="flex items-center gap-3"
                                 >
                                     <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-600">
-                                        {member.user?.name?.charAt(0).toUpperCase() || '?'}
+                                        {member.user?.name
+                                            ?.charAt(0)
+                                            .toUpperCase() || '?'}
                                     </div>
+
                                     <div>
                                         <p className="text-sm font-medium text-gray-800">
                                             {member.user?.name || 'Unknown'}
                                         </p>
+
                                         <p className="text-xs text-gray-400">
-                                            {trip.adminId === member.userId ? 'Admin' : 'Member'}
-                                            {member.status === 'INVITED' && ' · Invite pending'}
-                                            {member.status === 'ACCEPTED' && (member.hasSubmitted ? ' · Prefs submitted' : ' · Prefs pending')}
+                                            {trip.adminId === member.userId
+                                                ? 'Admin'
+                                                : 'Member'}
+
+                                            {member.status === 'INVITED' &&
+                                                ' · Invite pending'}
+
+                                            {member.status === 'ACCEPTED' &&
+                                                (member.hasSubmitted
+                                                    ? ' · Prefs submitted'
+                                                    : ' · Prefs pending')}
                                         </p>
                                     </div>
                                 </div>
@@ -139,12 +163,25 @@ const TripPage = () => {
                     </div>
                 </div>
 
+                {/* Main content */}
                 <div className="md:col-span-2">
                     <div className="bg-white border border-gray-200 rounded-xl p-5 min-h-48 flex flex-col items-center justify-center text-center">
-                        <p className="text-gray-400 text-sm mb-1">No itinerary yet</p>
-                        <p className="text-gray-400 text-xs">
+                        <p className="text-gray-400 text-sm mb-1">
+                            No itinerary yet
+                        </p>
+
+                        <p className="text-gray-400 text-xs mb-6">
                             All members need to submit their preferences first
                         </p>
+
+                        <button
+                            onClick={() =>
+                                navigate(`/trip/${trip.id}/preferences`)
+                            }
+                            className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                        >
+                            Submit your preferences
+                        </button>
                     </div>
                 </div>
             </div>
