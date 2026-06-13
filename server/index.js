@@ -4,12 +4,16 @@ const cors = require('cors')
 const prisma = require('./src/db')
 const usersRouter=require('./src/routes/users')
 const tripsRouter=require('./src/routes/trips')
+const membersRouter=require('./src/routes/members')
+const invitesRouter=require('./src/routes/invites')
 const app = express()
 
 app.use(cors())
 app.use(express.json())
 app.use('/api/users',usersRouter)
 app.use('/api/trips',tripsRouter)
+app.use('/api/trips/:tripId/members',membersRouter)
+app.use('/api/invites',invitesRouter)
 app.get('/health', async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`

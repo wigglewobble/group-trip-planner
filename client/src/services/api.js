@@ -49,3 +49,55 @@ export const tripsApi = {
     return res.json()
   }
 }
+
+export const membersApi = {
+  invite: async (tripId, email) => {
+    const headers = await getAuthHeaders()
+    const res = await fetch(`${BASE_URL}/api/trips/${tripId}/members/invite`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ email })
+    })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to invite member')
+    }
+    return res.json()
+  },
+
+  remove: async (tripId, userId) => {
+    const headers = await getAuthHeaders()
+    const res = await fetch(`${BASE_URL}/api/trips/${tripId}/members/${userId}`, {
+      method: 'DELETE',
+      headers
+    })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to remove member')
+    }
+    return res.json()
+  }
+}
+
+export const invitesApi = {
+  getMyInvites: async () => {
+    const headers = await getAuthHeaders()
+    const res = await fetch(`${BASE_URL}/api/invites`, { headers })
+    if (!res.ok) throw new Error('Failed to fetch invites')
+    return res.json()
+  },
+
+  respond: async (tripId, accept) => {
+    const headers = await getAuthHeaders()
+    const res = await fetch(`${BASE_URL}/api/invites/${tripId}/respond`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ accept })
+    })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to respond to invite')
+    }
+    return res.json()
+  }
+}

@@ -37,6 +37,7 @@ model TripMember {
   id           String   @id @default(uuid())
   tripId       String
   userId       String
+  status       MemberStatus @default(INVITED)
   budget       Float?
   interests    String[]
   energyLevel  String?
@@ -49,6 +50,7 @@ model TripMember {
 
   @@unique([tripId, userId])
 }
+
 
 model Itinerary {
   id        String   @id @default(uuid())
@@ -66,4 +68,10 @@ enum TripStatus {
   PLANNING
   READY
   REPLANNING
+}
+
+enum MemberStatus{
+  INVITED
+  ACCEPTED
+  DECLINED
 }

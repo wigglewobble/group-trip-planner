@@ -1,31 +1,43 @@
 import { useState, useEffect } from 'react'
 import TripCard from '../components/ui/TripCard'
 import CreateTripModal from '../components/ui/CreateTripModal'
-import { tripsApi } from '../services/api'
+import InvitesPanel from '../components/ui/InvitesPanel'
+import { tripsApi, invitesApi } from '../services/api'
 
 const Dashboard = () => {
   const [trips, setTrips] = useState([])
+  const [invites, setInvites] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
-    const fetchTrips = async () => {
+    const fetchData = async () => {
       try {
-        const { trips } = await tripsApi.getMyTrips()
-        setTrips(trips)
+        const [tripsRes, invitesRes] = await Promise.all([
+          tripsApi.getMyTrips(),
+          invitesApi.getMyInvites()
+        ])
+        setTrips(tripsRes.trips)
+        setInvites(invitesRes.invites)
       } catch (err) {
-        setError('Failed to load trips')
+        setError('Failed to load dashboard')
       } finally {
         setLoading(false)
       }
     }
 
-    fetchTrips()
+    fetchData()
   }, [])
 
   const handleTripCreated = (newTrip) => {
     setTrips(prev => [newTrip, ...prev])
+  }
+
+  const handleInviteResponded = async (tripId) => {
+    setInvites(prev => prev.filter(inv => inv.tripId !== tripId))
+    const { trips } = await tripsApi.getMyTrips()
+    setTrips(trips)
   }
 
   if (loading) {
@@ -60,6 +72,8 @@ const Dashboard = () => {
           {error}
         </div>
       )}
+
+      <InvitesPanel invites={invites} onResponded={handleInviteResponded} />
 
       {trips.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
