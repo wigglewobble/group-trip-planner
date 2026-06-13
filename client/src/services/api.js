@@ -49,7 +49,6 @@ export const tripsApi = {
     return res.json()
   }
 }
-
 export const membersApi = {
   invite: async (tripId, email) => {
     const headers = await getAuthHeaders()
@@ -58,26 +57,67 @@ export const membersApi = {
       headers,
       body: JSON.stringify({ email })
     })
+
     if (!res.ok) {
       const err = await res.json()
       throw new Error(err.error || 'Failed to invite member')
     }
+
     return res.json()
   },
 
   remove: async (tripId, userId) => {
     const headers = await getAuthHeaders()
-    const res = await fetch(`${BASE_URL}/api/trips/${tripId}/members/${userId}`, {
-      method: 'DELETE',
-      headers
-    })
+    const res = await fetch(
+      `${BASE_URL}/api/trips/${tripId}/members/${userId}`,
+      {
+        method: 'DELETE',
+        headers
+      }
+    )
+
     if (!res.ok) {
       const err = await res.json()
       throw new Error(err.error || 'Failed to remove member')
     }
+
+    return res.json()
+  },
+
+  savePreferences: async (tripId, preferences) => {
+    const headers = await getAuthHeaders()
+    const res = await fetch(
+      `${BASE_URL}/api/trips/${tripId}/members/preferences`,
+      {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(preferences)
+      }
+    )
+
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to save preferences')
+    }
+
+    return res.json()
+  },
+
+  getStatus: async (tripId) => {
+    const headers = await getAuthHeaders()
+    const res = await fetch(
+      `${BASE_URL}/api/trips/${tripId}/members/status`,
+      { headers }
+    )
+
+    if (!res.ok) {
+      throw new Error('Failed to get status')
+    }
+
     return res.json()
   }
 }
+
 
 export const invitesApi = {
   getMyInvites: async () => {
@@ -101,3 +141,4 @@ export const invitesApi = {
     return res.json()
   }
 }
+

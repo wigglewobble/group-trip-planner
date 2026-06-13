@@ -98,5 +98,76 @@ router.delete('/:userId', requireAuth, async (req, res) => {
     }
 })
 
+router.patch('/preferences', requireAuth, async (req, res) => {
+    const { tripId } = req.params
+    const { budget, interests, energyLevel, travelStyle } = req.body
+    const userId = req.user.id
 
+    if (!budget || !interests || !energyLevel || !travelStyle) {
+        return res.status(400).json({ error: 'All preference fields are required' })
+    }
+
+    if (!Array.isArray(interests) || interests.length === 0) {
+        return res.status(400).json({ error: 'Interests must be a non-empty array' })
+    }
+
+    try {
+        const member = await prisma.tripMember.findUnique({
+            where: {
+                tripId_userId: { tripId, userId }
+            }
+        })
+
+        if (!member) {
+            return res.status(404).json({ error: 'You are not a member of this trip' })
+        }
+
+        if (member.status !== 'ACCEPTED') {
+            return res.status(403).json({ error: 'You must accept the trip invite first' })
+        }
+
+        const updated = await prisma.tripMember.update({
+            where: {
+                tripId_userId: { tripId, userId }
+            },
+            data: {
+                budget: Number(budget),
+                interests,
+                energyLevel,
+                travelStyle,
+                hasSubmitted: true
+            },
+            include: {
+                user: true
+            }
+        })
+
+        res.json({ member: updated })
+    } catch (err) {
+        console.error('Save preferences error:', err)
+        res.status(500).json({ error: 'Failed to save preferences' })
+    }
+})
+
+router.get('/status', requireAuth, async (req, res) => {
+    const { tripId } = req.params
+
+    try {
+        const members = await prisma.tripMember.findMany({
+            where: {
+                tripId,
+                status: 'ACCEPTED'
+            }
+        })
+
+        const total = members.length
+        const submitted = members.filter(m => m.hasSubmitted).length
+        const allSubmitted = total > 0 && submitted === total
+
+        res.json({ total, submitted, allSubmitted })
+    } catch (err) {
+        console.error('Get status error:', err)
+        res.status(500).json({ error: 'Failed to get status' })
+    }
+})
 module.exports = router

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { tripsApi } from '../services/api'
+import { tripsApi, membersApi } from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import MemberAvatars from '../components/ui/MemberAvatars'
 import StatusPill from '../components/ui/StatusPill'
 import InviteMemberModal from '../components/ui/InviteMemberModal'
 
@@ -19,6 +20,7 @@ const TripPage = () => {
     const { user } = useAuth()
 
     const [trip, setTrip] = useState(null)
+    const [status, setStatus] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const [showInviteModal, setShowInviteModal] = useState(false)
@@ -28,6 +30,9 @@ const TripPage = () => {
             try {
                 const { trip } = await tripsApi.getTrip(id)
                 setTrip(trip)
+
+                const statusData = await membersApi.getStatus(id)
+                setStatus(statusData)
             } catch (err) {
                 setError('Trip not found or you do not have access')
             } finally {
@@ -68,13 +73,14 @@ const TripPage = () => {
     }
 
     const isAdmin = trip.adminId === user?.id
+
     const members =
         trip.members?.map(m => ({
             id: m.userId,
             name: m.user?.name || 'Unknown'
         })) || []
 
-    const status = trip.status?.toLowerCase() || 'planning'
+    const tripStatus = trip.status?.toLowerCase() || 'planning'
 
     return (
         <div>
@@ -91,7 +97,8 @@ const TripPage = () => {
                         <h1 className="text-xl font-medium text-gray-900">
                             {trip.name}
                         </h1>
-                        <StatusPill status={status} />
+
+                        <StatusPill status={tripStatus} />
                     </div>
 
                     <p className="text-sm text-gray-500">
@@ -116,9 +123,7 @@ const TripPage = () => {
 
                             {isAdmin && (
                                 <button
-                                    onClick={() =>
-                                        setShowInviteModal(true)
-                                    }
+                                    onClick={() => setShowInviteModal(true)}
                                     className="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1"
                                 >
                                     + Invite
@@ -152,9 +157,11 @@ const TripPage = () => {
                                                 ' · Invite pending'}
 
                                             {member.status === 'ACCEPTED' &&
-                                                (member.hasSubmitted
-                                                    ? ' · Prefs submitted'
-                                                    : ' · Prefs pending')}
+                                                (
+                                                    member.hasSubmitted
+                                                        ? ' · Prefs submitted'
+                                                        : ' · Prefs pending'
+                                                )}
                                         </p>
                                     </div>
                                 </div>
@@ -165,14 +172,39 @@ const TripPage = () => {
 
                 {/* Main content */}
                 <div className="md:col-span-2">
-                    <div className="bg-white border border-gray-200 rounded-xl p-5 min-h-48 flex flex-col items-center justify-center text-center">
-                        <p className="text-gray-400 text-sm mb-1">
-                            No itinerary yet
-                        </p>
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 min-h-48 flex flex-col items-center justify-center text-center gap-3">
 
-                        <p className="text-gray-400 text-xs mb-6">
-                            All members need to submit their preferences first
-                        </p>
+                        {status && (
+                            <div className="w-full max-w-xs">
+                                <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                                    <span>Preferences submitted</span>
+                                    <span>
+                                        {status.submitted} / {status.total}
+                                    </span>
+                                </div>
+
+                                <div className="w-full bg-gray-100 rounded-full h-1.5">
+                                    <div
+                                        className="bg-gray-900 h-1.5 rounded-full transition-all duration-300"
+                                        style={{
+                                            width: `${(status.submitted / status.total) * 100}%`
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div>
+                            <p className="text-gray-400 text-sm mb-1">
+                                No itinerary yet
+                            </p>
+
+                            <p className="text-gray-400 text-xs">
+                                {status?.allSubmitted
+                                    ? 'Everyone has submitted! Ready to generate.'
+                                    : 'All members need to submit their preferences first'}
+                            </p>
+                        </div>
 
                         <button
                             onClick={() =>
@@ -180,7 +212,9 @@ const TripPage = () => {
                             }
                             className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
                         >
-                            Submit your preferences
+                            {status?.allSubmitted
+                                ? 'Edit your preferences'
+                                : 'Submit your preferences'}
                         </button>
                     </div>
                 </div>

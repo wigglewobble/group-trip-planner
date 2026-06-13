@@ -3,11 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom'
 import InterestChip from '../components/ui/InterestChip'
 import OptionCard from '../components/ui/OptionCard'
 import { INTERESTS_OPTIONS, ENERGY_LEVELS, TRAVEL_STYLES } from '../services/constants'
-
+import { membersApi,tripsApi } from '../services/api'
+import { useAuth } from '../context/AuthContext'
 const PreferenceForm = () => {
     const { id } = useParams()
     const navigate = useNavigate()
-
+    const { user } = useAuth()
     const [form, setForm] = useState({
         budget: '',
         interests: [],
@@ -15,7 +16,31 @@ const PreferenceForm = () => {
         travelStyle: '',
     })
     const [loading, setLoading] = useState(false)
+    const [initialLoading, setInitialLoading] = useState(true)
     const [error, setError] = useState('')
+    useEffect(() => {
+        const loadExisting = async () => {
+            try {
+                const { trip } = await tripsApi.getTrip(id)
+                const myMembership = trip.members.find(m => m.userId === user?.id)
+
+                if (myMembership && myMembership.hasSubmitted) {
+                    setForm({
+                        budget: myMembership.budget?.toString() || '',
+                        interests: myMembership.interests || [],
+                        energyLevel: myMembership.energyLevel || '',
+                        travelStyle: myMembership.travelStyle || '',
+                    })
+                }
+            } catch (err) {
+                console.error('Failed to load existing preferences:', err)
+            } finally {
+                setInitialLoading(false)
+            }
+        }
+
+        loadExisting()
+    }, [id, user])
 
     const toggleInterest = (value) => {
         setForm(prev => {
@@ -57,8 +82,12 @@ const PreferenceForm = () => {
 
         setLoading(true)
         try {
-
-            console.log('Preferences submitted:', form)
+            await membersApi.savePreferences(id, {
+                budget: form.budget,
+                interests: form.interests,
+                energyLevel: form.energyLevel,
+                travelStyle: form.travelStyle
+            })
             navigate(`/trip/${id}`)
         } catch (err) {
             setError(err.message || 'Failed to save preferences')
@@ -66,7 +95,13 @@ const PreferenceForm = () => {
             setLoading(false)
         }
     }
-
+    if (initialLoading) {
+        return (
+            <div className="flex items-center justify-center py-20">
+                <p className="text-sm text-gray-400">Loading...</p>
+            </div>
+        )
+    }
     return (
         <div className="max-w-2xl mx-auto">
             <button
