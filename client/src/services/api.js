@@ -142,3 +142,27 @@ export const invitesApi = {
   }
 }
 
+export const itineraryApi = {
+  generate: async (tripId) => {
+    const headers = await getAuthHeaders()
+    const res = await fetch(`${BASE_URL}/api/trips/${tripId}/itinerary/generate`, {
+      method: 'POST',
+      headers
+    })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to generate itinerary')
+    }
+    return res.json()
+  },
+
+  getActive: async (tripId) => {
+    const headers = await getAuthHeaders()
+    const res = await fetch(`${BASE_URL}/api/trips/${tripId}/itinerary/active`, { headers })
+    if (res.status === 404) {
+      return { itinerary: null }
+    }
+    if (!res.ok) throw new Error('Failed to get itinerary')
+    return res.json()
+  }
+}

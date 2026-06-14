@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { tripsApi, membersApi } from '../services/api'
+import { tripsApi, membersApi, itineraryApi } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import MemberAvatars from '../components/ui/MemberAvatars'
 import StatusPill from '../components/ui/StatusPill'
 import InviteMemberModal from '../components/ui/InviteMemberModal'
-
+import ItineraryDisplay from '../components/ui/ItineraryDisplay'
 const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-IN', {
         day: 'numeric',
@@ -24,7 +24,9 @@ const TripPage = () => {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const [showInviteModal, setShowInviteModal] = useState(false)
-
+    const [itinerary, setItinerary] = useState(null)
+    const [generating, setGenerating] = useState(false)
+    const [generateError, setGenerateError] = useState('')
     useEffect(() => {
         const fetchTrip = async () => {
             try {
@@ -33,6 +35,9 @@ const TripPage = () => {
 
                 const statusData = await membersApi.getStatus(id)
                 setStatus(statusData)
+
+                const { itinerary } = await itineraryApi.getActive(id)
+                setItinerary(itinerary)
             } catch (err) {
                 setError('Trip not found or you do not have access')
             } finally {
@@ -82,6 +87,19 @@ const TripPage = () => {
 
     const tripStatus = trip.status?.toLowerCase() || 'planning'
 
+    const handleGenerate = async () => {
+        setGenerateError('')
+        setGenerating(true)
+        try {
+            const { itinerary } = await itineraryApi.generate(id)
+            setItinerary(itinerary)
+            setTrip(prev => ({ ...prev, status: 'READY' }))
+        } catch (err) {
+            setGenerateError(err.message || 'Failed to generate itinerary')
+        } finally {
+            setGenerating(false)
+        }
+    }
     return (
         <div>
             <button
@@ -170,53 +188,59 @@ const TripPage = () => {
                     </div>
                 </div>
 
-                {/* Main content */}
                 <div className="md:col-span-2">
-                    <div className="bg-white border border-gray-200 rounded-xl p-5 min-h-48 flex flex-col items-center justify-center text-center gap-3">
-
-                        {status && (
-                            <div className="w-full max-w-xs">
-                                <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-                                    <span>Preferences submitted</span>
-                                    <span>
-                                        {status.submitted} / {status.total}
-                                    </span>
-                                </div>
-
-                                <div className="w-full bg-gray-100 rounded-full h-1.5">
-                                    <div
-                                        className="bg-gray-900 h-1.5 rounded-full transition-all duration-300"
-                                        style={{
-                                            width: `${(status.submitted / status.total) * 100}%`
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        <div>
-                            <p className="text-gray-400 text-sm mb-1">
-                                No itinerary yet
-                            </p>
-
-                            <p className="text-gray-400 text-xs">
-                                {status?.allSubmitted
-                                    ? 'Everyone has submitted! Ready to generate.'
-                                    : 'All members need to submit their preferences first'}
-                            </p>
+                    {generateError && (
+                        <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                            {generateError}
                         </div>
+                    )}
 
-                        <button
-                            onClick={() =>
-                                navigate(`/trip/${trip.id}/preferences`)
-                            }
-                            className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-                        >
-                            {status?.allSubmitted
-                                ? 'Edit your preferences'
-                                : 'Submit your preferences'}
-                        </button>
-                    </div>
+                    {itinerary ? (
+                        <ItineraryDisplay itinerary={itinerary} />
+                    ) : (
+                        <div className="bg-white border border-gray-200 rounded-xl p-5 min-h-48 flex flex-col items-center justify-center text-center gap-3">
+                            {status && (
+                                <div className="w-full max-w-xs">
+                                    <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                                        <span>Preferences submitted</span>
+                                        <span>{status.submitted} / {status.total}</span>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-1.5">
+                                        <div
+                                            className="bg-gray-900 h-1.5 rounded-full transition-all duration-300"
+                                            style={{ width: `${(status.submitted / status.total) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div>
+                                <p className="text-gray-400 text-sm mb-1">No itinerary yet</p>
+                                <p className="text-gray-400 text-xs">
+                                    {status?.allSubmitted
+                                        ? 'Everyone has submitted! Ready to generate.'
+                                        : 'All members need to submit their preferences first'}
+                                </p>
+                            </div>
+
+                            {status?.allSubmitted ? (
+                                <button
+                                    onClick={handleGenerate}
+                                    disabled={generating}
+                                    className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {generating ? 'Generating itinerary...' : 'Generate itinerary'}
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => navigate(`/trip/${trip.id}/preferences`)}
+                                    className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                                >
+                                    Submit your preferences
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
