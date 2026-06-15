@@ -19,14 +19,16 @@ model User {
 }
 
 model Trip {
-  id          String     @id @default(uuid())
-  name        String
-  destination String
-  startDate   DateTime
-  endDate     DateTime
-  status      TripStatus @default(PLANNING)
-  adminId     String
-  createdAt   DateTime   @default(now())
+  id            String     @id @default(uuid())
+  name          String
+  destination   String
+  startDate     DateTime
+  endDate       DateTime
+  status        TripStatus @default(PLANNING)
+  adminId       String
+  needsReplan   Boolean    @default(false)
+  replanReason  String?
+  createdAt     DateTime   @default(now())
 
   admin       User         @relation("TripAdmin", fields: [adminId], references: [id])
   members     TripMember[]

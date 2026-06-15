@@ -90,7 +90,20 @@ router.delete('/:userId', requireAuth, async (req, res) => {
                 }
             }
         })
+        const hasItinerary = await prisma.itinerary.findFirst({
+            where: { tripId, isActive: true }
+        })
 
+        if (hasItinerary) {
+            const removedMember = await prisma.user.findUnique({ where: { id: userId } })
+            await prisma.trip.update({
+                where: { id: tripId },
+                data: {
+                    needsReplan: true,
+                    replanReason: `${removedMember?.name || 'A member'} left the trip`
+                }
+            })
+        }
         res.json({ message: 'Member removed' })
     } catch (err) {
         console.error('Remove member error:', err)
@@ -125,6 +138,13 @@ router.patch('/preferences', requireAuth, async (req, res) => {
         if (member.status !== 'ACCEPTED') {
             return res.status(403).json({ error: 'You must accept the trip invite first' })
         }
+        const oldBudget = member.budget
+        const newBudget = Number(budget)
+        let budgetChangedSignificantly = false
+
+        if (oldBudget && Math.abs(newBudget - oldBudget) / oldBudget > 0.2) {
+            budgetChangedSignificantly = true
+        }
 
         const updated = await prisma.tripMember.update({
             where: {
@@ -141,6 +161,21 @@ router.patch('/preferences', requireAuth, async (req, res) => {
                 user: true
             }
         })
+        if (budgetChangedSignificantly) {
+            const hasItinerary = await prisma.itinerary.findFirst({
+                where: { tripId, isActive: true }
+            })
+
+            if (hasItinerary) {
+                await prisma.trip.update({
+                    where: { id: tripId },
+                    data: {
+                        needsReplan: true,
+                        replanReason: `${updated.user.name} changed their budget significantly`
+                    }
+                })
+            }
+        }
 
         res.json({ member: updated })
     } catch (err) {

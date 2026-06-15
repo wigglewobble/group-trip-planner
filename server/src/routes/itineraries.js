@@ -4,7 +4,8 @@ const prisma = require('../db')
 const { requireAuth } = require('../middleware/auth')
 const { aggregatePreferences } = require('../services/aggregator')
 const { generateTripItinerary } = require('../services/ai')
-const { validateItineraryStructure } = require('../services/validator')
+const { validateItineraryStructure, validateWeather } = require('../services/validator')
+const { getWeatherForecast } = require('../services/weather')
 router.post('/generate', requireAuth, async (req, res) => {
     const { tripId } = req.params
 
@@ -50,10 +51,20 @@ router.post('/generate', requireAuth, async (req, res) => {
                 issues: validation.issues
             })
         }
+        let weatherIssues = []
+        try {
+            const { forecast } = await getWeatherForecast(trip.destination, tripDetails.startDate, tripDetails.endDate)
+            weatherIssues = validateWeather(itinerary, forecast)
+        } catch (weatherErr) {
+            console.error('Weather check skipped:', weatherErr.message)
+        }
+
+        const allIssues = [...validation.issues, ...weatherIssues]
         await prisma.itinerary.updateMany({
             where: { tripId },
             data: { isActive: false }
         })
+
 
         const savedItinerary = await prisma.itinerary.create({
             data: {
@@ -66,10 +77,10 @@ router.post('/generate', requireAuth, async (req, res) => {
 
         await prisma.trip.update({
             where: { id: tripId },
-            data: { status: 'READY' }
+            data: { status: 'READY', needsReplan: false, replanReason:null }
         })
 
-        res.status(201).json({ itinerary: savedItinerary, provider,validationIssues: validation.issues })
+        res.status(201).json({ itinerary: savedItinerary, provider, validationIssues:allIssues })
     } catch (err) {
         console.error('Generate itinerary error:', err)
         res.status(500).json({ error: err.message || 'Failed to generate itinerary' })

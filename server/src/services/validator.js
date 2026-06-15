@@ -3,7 +3,6 @@ const KNOWN_CATEGORIES = [
   'shopping', 'nature', 'adventure', 'relaxation', 'photography',
   'logistics', 'culture', 'other'
 ]
-
 const validateItineraryStructure = (itinerary, tripDetails, aggregatedPrefs) => {
   const issues = []
 
@@ -84,5 +83,45 @@ const validateItineraryStructure = (itinerary, tripDetails, aggregatedPrefs) => 
     calculatedCost: fullCalculatedCost
   }
 }
+const OUTDOOR_CATEGORIES = ['beaches', 'mountains', 'nature', 'adventure', 'photography']
+const RAIN_THRESHOLD = 60
 
-module.exports = { validateItineraryStructure, KNOWN_CATEGORIES }
+const validateWeather = (itinerary, forecast) => {
+  const issues = []
+
+  if (!forecast || forecast.length === 0) {
+    return issues
+  }
+
+  const forecastByDate = {}
+  forecast.forEach(day => {
+    forecastByDate[day.date] = day
+  })
+
+  itinerary.days?.forEach(day => {
+    const dayForecast = forecastByDate[day.date]
+
+    if (!dayForecast) return
+
+    if (dayForecast.precipitationProbability >= RAIN_THRESHOLD) {
+      const outdoorActivities = day.activities?.filter(
+        act => OUTDOOR_CATEGORIES.includes(act.category)
+      ) || []
+
+      outdoorActivities.forEach(activity => {
+        issues.push({
+          severity: 'moderate',
+          type: 'weather_risk',
+          message: `"${activity.title}" on Day ${day.day} (${day.date}) has ${dayForecast.precipitationProbability}% rain chance`,
+          day: day.day,
+          activityTitle: activity.title
+        })
+      })
+    }
+  })
+
+  return issues
+}
+
+module.exports = { validateItineraryStructure, validateWeather, KNOWN_CATEGORIES }
+
