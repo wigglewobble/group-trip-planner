@@ -234,14 +234,21 @@ const TripPage = () => {
 
                     {itinerary ? (
                         <div className="flex flex-col gap-4">
-                            <div className="flex items-center justify-between">
-                                <button
-                                    onClick={() => navigate(`/trip/${trip.id}/preferences`)}
-                                    className="text-sm text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5"
-                                >
-                                    Edit your preferences
-                                </button>
-
+                            <div className="flex items-center justify-between flex-wrap gap-2">
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => navigate(`/trip/${trip.id}/preferences`)}
+                                        className="text-sm text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5"
+                                    >
+                                        Edit your preferences
+                                    </button>
+                                    <button
+                                        onClick={() => navigate(`/trip/${trip.id}/map`)}
+                                        className="text-sm text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5"
+                                    >
+                                        View map
+                                    </button>
+                                </div>
                                 <button
                                     onClick={handleGenerate}
                                     disabled={generating}
