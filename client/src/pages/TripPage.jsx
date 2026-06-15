@@ -77,7 +77,16 @@ const TripPage = () => {
             </div>
         )
     }
+    const handleLeaveTrip = async () => {
+        if (!confirm('Are you sure you want to leave this trip?')) return
 
+        try {
+            await membersApi.remove(trip.id, user.id)
+            navigate('/')
+        } catch (err) {
+            alert(err.message || 'Failed to leave trip')
+        }
+    }
     const isAdmin = trip.adminId === user?.id
 
     const members =
@@ -95,7 +104,7 @@ const TripPage = () => {
             const { itinerary, validationIssues } = await itineraryApi.generate(id)
             setItinerary(itinerary)
             setValidationIssues(validationIssues || [])
-            setTrip(prev => ({ ...prev, status: 'READY' }))
+            setTrip(prev => ({ ...prev, status: 'READY', needsReplan: false, replanReason: null }))
         } catch (err) {
             if (err.issues) {
                 setGenerateError(`${err.message}: ${err.issues.map(i => i.message).join(', ')}`)
@@ -121,20 +130,41 @@ const TripPage = () => {
                         <h1 className="text-xl font-medium text-gray-900">
                             {trip.name}
                         </h1>
-
                         <StatusPill status={tripStatus} />
                     </div>
-
                     <p className="text-sm text-gray-500">
                         {trip.destination}
                     </p>
-
                     <p className="text-sm text-gray-400 mt-1">
                         {formatDate(trip.startDate)} →{' '}
                         {formatDate(trip.endDate)}
                     </p>
                 </div>
+
+                {!isAdmin && (
+                    <button
+                        onClick={handleLeaveTrip}
+                        className="text-sm text-red-500 hover:text-red-700 border border-red-200 rounded-lg px-3 py-1.5 whitespace-nowrap"
+                    >
+                        Leave trip
+                    </button>
+                )}
             </div>
+            {trip.needsReplan && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-center justify-between gap-4">
+                    <div>
+                        <p className="text-sm font-medium text-amber-800">Your plan may be outdated</p>
+                        <p className="text-xs text-amber-700 mt-0.5">{trip.replanReason}</p>
+                    </div>
+                    <button
+                        onClick={handleGenerate}
+                        disabled={generating}
+                        className="text-sm bg-amber-900 text-white px-4 py-2 rounded-lg hover:bg-amber-800 transition-colors disabled:opacity-50 whitespace-nowrap"
+                    >
+                        {generating ? 'Regenerating...' : 'Regenerate now'}
+                    </button>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Members */}
