@@ -6,6 +6,7 @@ const { aggregatePreferences } = require('../services/aggregator')
 const { generateTripItinerary } = require('../services/ai')
 const { validateItineraryStructure, validateWeather } = require('../services/validator')
 const { getWeatherForecast } = require('../services/weather')
+const { geocodeItinerary }=require('../services/geocoding')
 router.post('/generate', requireAuth, async (req, res) => {
     const { tripId } = req.params
 
@@ -60,6 +61,7 @@ router.post('/generate', requireAuth, async (req, res) => {
         }
 
         const allIssues = [...validation.issues, ...weatherIssues]
+        const geocodedItinerary = await geocodeItinerary(itinerary, trip.destination)
         await prisma.itinerary.updateMany({
             where: { tripId },
             data: { isActive: false }
@@ -69,7 +71,7 @@ router.post('/generate', requireAuth, async (req, res) => {
         const savedItinerary = await prisma.itinerary.create({
             data: {
                 tripId,
-                data: itinerary,
+                data: geocodedItinerary,
                 version: 1,
                 isActive: true
             }

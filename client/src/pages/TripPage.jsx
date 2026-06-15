@@ -247,7 +247,7 @@ const TripPage = () => {
                                     disabled={generating}
                                     className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {generating ? 'Regenerating...' : 'Regenerate itinerary'}
+                                    {generating ? 'Regenerating (this can take 30-60s)...' : 'Regenerate itinerary'}
                                 </button>
                             </div>
 
@@ -288,7 +288,7 @@ const TripPage = () => {
                                     disabled={generating}
                                     className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {generating ? 'Generating itinerary...' : 'Generate itinerary'}
+                                    {generating ? 'Generating itinerary (this can take 30-60s)...' : 'Generate itinerary'}
                                 </button>
                             ) : (
                                 <button
