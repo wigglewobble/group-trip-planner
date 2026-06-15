@@ -151,7 +151,9 @@ export const itineraryApi = {
     })
     if (!res.ok) {
       const err = await res.json()
-      throw new Error(err.error || 'Failed to generate itinerary')
+      const error = new Error(err.error || 'Failed to generate itinerary')
+      error.issues = err.issues
+      throw error
     }
     return res.json()
   },

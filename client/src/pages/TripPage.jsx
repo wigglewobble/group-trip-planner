@@ -27,6 +27,7 @@ const TripPage = () => {
     const [itinerary, setItinerary] = useState(null)
     const [generating, setGenerating] = useState(false)
     const [generateError, setGenerateError] = useState('')
+    const [validationIssues, setValidationIssues] = useState([])
     useEffect(() => {
         const fetchTrip = async () => {
             try {
@@ -91,11 +92,16 @@ const TripPage = () => {
         setGenerateError('')
         setGenerating(true)
         try {
-            const { itinerary } = await itineraryApi.generate(id)
+            const { itinerary, validationIssues } = await itineraryApi.generate(id)
             setItinerary(itinerary)
+            setValidationIssues(validationIssues || [])
             setTrip(prev => ({ ...prev, status: 'READY' }))
         } catch (err) {
-            setGenerateError(err.message || 'Failed to generate itinerary')
+            if (err.issues) {
+                setGenerateError(`${err.message}: ${err.issues.map(i => i.message).join(', ')}`)
+            } else {
+                setGenerateError(err.message || 'Failed to generate itinerary')
+            }
         } finally {
             setGenerating(false)
         }
@@ -195,8 +201,31 @@ const TripPage = () => {
                         </div>
                     )}
 
+
                     {itinerary ? (
-                        <ItineraryDisplay itinerary={itinerary} />
+                        <div className="flex flex-col gap-4">
+                            <div className="flex items-center justify-between">
+                                <button
+                                    onClick={() => navigate(`/trip/${trip.id}/preferences`)}
+                                    className="text-sm text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5"
+                                >
+                                    Edit your preferences
+                                </button>
+
+                                <button
+                                    onClick={handleGenerate}
+                                    disabled={generating}
+                                    className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {generating ? 'Regenerating...' : 'Regenerate itinerary'}
+                                </button>
+                            </div>
+
+                            <ItineraryDisplay
+                                itinerary={itinerary}
+                                validationIssues={validationIssues}
+                            />
+                        </div>
                     ) : (
                         <div className="bg-white border border-gray-200 rounded-xl p-5 min-h-48 flex flex-col items-center justify-center text-center gap-3">
                             {status && (
