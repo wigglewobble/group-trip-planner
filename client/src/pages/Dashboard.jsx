@@ -50,7 +50,7 @@ const Dashboard = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 gap-3">
         <div>
           <h1 className="text-xl font-medium text-gray-900">My Trips</h1>
           <p className="text-sm text-gray-500 mt-0.5">
@@ -60,10 +60,11 @@ const Dashboard = () => {
 
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-gray-900 text-white text-sm px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors duration-150"
+          className="flex items-center gap-1.5 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg hover:bg-gray-700 transition-colors duration-150 whitespace-nowrap flex-shrink-0"
         >
           <span className="text-base leading-none">+</span>
-          New Trip
+          <span className="hidden sm:inline">New Trip</span>
+          <span className="sm:hidden">New</span>
         </button>
       </div>
 

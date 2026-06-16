@@ -124,9 +124,9 @@ const TripPage = () => {
                 ← Back
             </button>
 
-            <div className="flex items-start justify-between gap-4 mb-6">
+            <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
                 <div>
-                    <div className="flex items-center gap-3 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h1 className="text-xl font-medium text-gray-900">
                             {trip.name}
                         </h1>

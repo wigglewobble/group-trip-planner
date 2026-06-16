@@ -19,6 +19,18 @@ const ItineraryDisplay = ({ itinerary, validationIssues = [] }) => {
     const moderateOrMinorIssues = validationIssues.filter(i => i.severity !== 'critical')
     return (
         <div className="flex flex-col gap-5">
+            {moderateOrMinorIssues.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <p className="text-sm font-medium text-amber-800 mb-2">Heads up</p>
+                    <ul className="flex flex-col gap-1">
+                        {moderateOrMinorIssues.map((issue, idx) => (
+                            <li key={idx} className="text-xs text-amber-700">
+                                • {issue.message}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
             <div className="bg-white border border-gray-200 rounded-xl p-5">
                 <h2 className="text-base font-medium text-gray-900 mb-2">
@@ -65,7 +77,7 @@ const ItineraryDisplay = ({ itinerary, validationIssues = [] }) => {
                                 <span className="text-xs text-gray-400 w-12 flex-shrink-0 pt-0.5">
                                     {activity.time}
                                 </span>
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <p className="text-sm font-medium text-gray-800">{activity.title}</p>
                                         <span className={`text-xs px-2 py-0.5 rounded-full ${categoryColors[activity.category] || categoryColors.other}`}>
@@ -76,7 +88,7 @@ const ItineraryDisplay = ({ itinerary, validationIssues = [] }) => {
                                     <div className="flex items-center gap-3 mt-1">
                                         <p className="text-xs text-gray-400">{activity.location}</p>
                                         {activity.estimatedCost > 0 && (
-                                            <p className="text-xs text-gray-400">
+                                            <p className="text-xs text-gray-400 flex-shrink-0">
                                                 ₹{activity.estimatedCost.toLocaleString('en-IN')}
                                             </p>
                                         )}

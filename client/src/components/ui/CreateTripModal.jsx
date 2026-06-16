@@ -95,7 +95,7 @@ const CreateTripModal = ({ onClose, onCreated }) => {
             />
           </div>
 
-          <div className="flex flex-col gap-4 md:flex-row">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <div className="flex flex-col gap-1.5 flex-1">
               <label className="text-sm font-medium text-gray-700">Start date</label>
               <input
