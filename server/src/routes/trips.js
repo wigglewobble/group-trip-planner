@@ -1,6 +1,8 @@
 const express = require('express')
+
 const router = express.Router()
 const prisma = require('../db')
+const crypto = require('crypto')
 const { requireAuth } = require('../middleware/auth')
 
 router.post('/', requireAuth, async (req, res) => {
@@ -31,6 +33,7 @@ router.post('/', requireAuth, async (req, res) => {
                 startDate: new Date(startDate),
                 endDate: new Date(endDate),
                 adminId: req.user.id,
+                inviteToken: crypto.randomBytes(6).toString('hex'),
                 members: {
                     create: {
                         userId: req.user.id,
@@ -40,9 +43,7 @@ router.post('/', requireAuth, async (req, res) => {
             },
             include: {
                 members: {
-                    include: {
-                        user: true
-                    }
+                    include: { user: true }
                 }
             }
         })
@@ -129,5 +130,67 @@ router.delete('/:id', requireAuth, async (req, res) => {
         console.error('Delete trip error:', err)
         res.status(500).json({ error: 'Failed to delete trip' })
     }
+})
+router.get('/join/:token', requireAuth, async (req, res) => {
+  const { token } = req.params
+
+  try {
+    const trip = await prisma.trip.findUnique({
+      where: { inviteToken: token },
+      include: {
+        members: true
+      }
+    })
+
+    if (!trip) {
+      return res.status(404).json({ error: 'Invalid invite link' })
+    }
+
+    const alreadyMember = trip.members.some(m => m.userId === req.user.id)
+    if (alreadyMember) {
+      return res.json({ trip, alreadyMember: true })
+    }
+
+    const member = await prisma.tripMember.create({
+      data: {
+        tripId: trip.id,
+        userId: req.user.id,
+        status: 'ACCEPTED'
+      }
+    })
+
+    res.json({ trip, member, alreadyMember: false })
+  } catch (err) {
+    console.error('Join trip error:', err)
+    res.status(500).json({ error: 'Failed to join trip' })
+  }
+})
+router.patch('/:id/notes', requireAuth, async (req, res) => {
+  const { id } = req.params
+  const { notes } = req.body
+
+  try {
+    const trip = await prisma.trip.findUnique({
+      where: { id },
+      include: { members: true }
+    })
+
+    if (!trip) return res.status(404).json({ error: 'Trip not found' })
+
+    const isMember = trip.members.some(
+      m => m.userId === req.user.id && m.status === 'ACCEPTED'
+    )
+    if (!isMember) return res.status(403).json({ error: 'Not a member' })
+
+    const updated = await prisma.trip.update({
+      where: { id },
+      data: { notes }
+    })
+
+    res.json({ notes: updated.notes })
+  } catch (err) {
+    console.error('Update notes error:', err)
+    res.status(500).json({ error: 'Failed to update notes' })
+  }
 })
 module.exports = router

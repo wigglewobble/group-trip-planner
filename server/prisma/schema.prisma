@@ -33,6 +33,8 @@ model Trip {
   admin       User         @relation("TripAdmin", fields: [adminId], references: [id])
   members     TripMember[]
   itineraries Itinerary[]
+  inviteToken  String?  @unique
+  notes  String?  @default("")
 }
 
 model TripMember {

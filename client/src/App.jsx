@@ -8,14 +8,15 @@ import MapView from './pages/MapView'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import NotFound from './pages/NotFound'
-
+import Profile from './pages/Profile'
+import JoinTrip from './pages/JoinTrip'
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-
+        <Route path="/join/:token" element={<JoinTrip />} />
         <Route path="/" element={
           <ProtectedRoute>
             <Layout><Dashboard /></Layout>
@@ -41,6 +42,11 @@ const App = () => {
         } />
 
         <Route path="*" element={<NotFound />} />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Layout><Profile /></Layout>
+          </ProtectedRoute>
+        } />
       </Routes>
     </BrowserRouter>
   )

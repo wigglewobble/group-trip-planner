@@ -6,7 +6,8 @@ const { aggregatePreferences } = require('../services/aggregator')
 const { generateTripItinerary } = require('../services/ai')
 const { validateItineraryStructure, validateWeather } = require('../services/validator')
 const { getWeatherForecast } = require('../services/weather')
-const { geocodeItinerary }=require('../services/geocoding')
+const { geocodeItinerary } = require('../services/geocoding')
+
 router.post('/generate', requireAuth, async (req, res) => {
     const { tripId } = req.params
 
@@ -62,6 +63,7 @@ router.post('/generate', requireAuth, async (req, res) => {
 
         const allIssues = [...validation.issues, ...weatherIssues]
         const geocodedItinerary = await geocodeItinerary(itinerary, trip.destination)
+
         await prisma.itinerary.updateMany({
             where: { tripId },
             data: { isActive: false }
@@ -79,10 +81,10 @@ router.post('/generate', requireAuth, async (req, res) => {
 
         await prisma.trip.update({
             where: { id: tripId },
-            data: { status: 'READY', needsReplan: false, replanReason:null }
+            data: { status: 'READY', needsReplan: false, replanReason: null }
         })
 
-        res.status(201).json({ itinerary: savedItinerary, provider, validationIssues:allIssues })
+        res.status(201).json({ itinerary: savedItinerary, provider, validationIssues: allIssues })
     } catch (err) {
         console.error('Generate itinerary error:', err)
         res.status(500).json({ error: err.message || 'Failed to generate itinerary' })
@@ -99,7 +101,7 @@ router.get('/active', requireAuth, async (req, res) => {
         })
 
         if (!itinerary) {
-            return res.status(404).json({ error: 'No active itinerary found' })
+            return res.json({ itinerary: null })
         }
 
         res.json({ itinerary })

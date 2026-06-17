@@ -47,6 +47,25 @@ export const tripsApi = {
     })
     if (!res.ok) throw new Error('Failed to delete trip')
     return res.json()
+  },
+  updateNotes: async (tripId, notes) => {
+    const headers = await getAuthHeaders()
+    const res = await fetch(`${BASE_URL}/api/trips/${tripId}/notes`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ notes })
+    })
+    if (!res.ok) throw new Error('Failed to update notes')
+    return res.json()
+  },
+  joinViaToken: async (token) => {
+    const headers = await getAuthHeaders()
+    const res = await fetch(`${BASE_URL}/api/trips/join/${token}`, { headers })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to join trip')
+    }
+    return res.json()
   }
 }
 export const membersApi = {
@@ -160,11 +179,14 @@ export const itineraryApi = {
 
   getActive: async (tripId) => {
     const headers = await getAuthHeaders()
-    const res = await fetch(`${BASE_URL}/api/trips/${tripId}/itinerary/active`, { headers })
-    if (res.status === 404) {
-      return { itinerary: null }
-    }
+
+    const res = await fetch(
+      `${BASE_URL}/api/trips/${tripId}/itinerary/active`,
+      { headers }
+    )
+
     if (!res.ok) throw new Error('Failed to get itinerary')
+
     return res.json()
   }
 }
