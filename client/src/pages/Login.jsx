@@ -20,12 +20,13 @@ const Login = () => {
     setLoading(true)
     try {
       await login(form.email, form.password)
-
+      
       const pendingToken = localStorage.getItem('pendingInviteToken')
 
       if (pendingToken) {
         localStorage.removeItem('pendingInviteToken')
         navigate(`/join/${pendingToken}`, { replace: true })
+        
       } else {
         const from = location.state?.from?.pathname || '/'
         navigate(from, { replace: true })
@@ -37,22 +38,14 @@ const Login = () => {
     }
   }
 
-  if (!authLoading && isLoggedIn) {
-    const pendingToken = localStorage.getItem('pendingInviteToken')
-
-    if (pendingToken) {
-      return <Navigate to={`/join/${pendingToken}`} replace />
-    }
-
-    return <Navigate to="/" replace />
-  }
+  
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#191919] flex items-center justify-center px-4 transition-colors duration-200">
       <div className="w-full max-w-sm">
 
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-medium text-gray-900 dark:text-white">TripSync</h1>
+          <h1 className="text-2xl font-medium text-gray-900 dark:text-white">TripNest</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Sign in to your account</p>
         </div>
 

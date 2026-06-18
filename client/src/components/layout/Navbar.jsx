@@ -34,7 +34,7 @@ const Navbar = () => {
   return (
     <nav className="w-full border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#202020] px-6 py-4 flex items-center justify-between transition-colors duration-200">
       <Link to="/" className="text-lg font-medium text-gray-900 dark:text-white">
-        TripSync
+        TripNest
       </Link>
 
       <div className="hidden md:flex items-center gap-6">

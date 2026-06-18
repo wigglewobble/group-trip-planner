@@ -13,9 +13,7 @@ router.post('/', requireAuth, async (req, res) => {
     }
     try {
 
-        console.log("===============");
-        console.log("req.user =", req.user);
-        console.log("req.user.id =", req.user.id);
+        
 
         const user = await prisma.user.findUnique({
             where: {
@@ -23,8 +21,7 @@ router.post('/', requireAuth, async (req, res) => {
             }
         });
 
-        console.log("User found in DB =", user);
-        console.log("===============");
+        
 
         const trip = await prisma.trip.create({
             data: {

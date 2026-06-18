@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../services/supabase'
-
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 const AuthContext = createContext(null)
 
 export const AuthProvider = ({ children }) => {
@@ -13,26 +13,26 @@ export const AuthProvider = ({ children }) => {
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null)
-      }
-    )
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
 
     return () => subscription.unsubscribe()
   }, [])
 
   const syncUserToBackend = async (supabaseUser, name) => {
-    
+    const {
+      data: { session }
+    } = await supabase.auth.getSession()
 
-    const session = await supabase.auth.getSession()
-    
     try {
-      const response = await fetch('http://localhost:3001/api/users/sync', {
+      await fetch(`${BASE_URL}/api/users/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.data.session?.access_token}`
+          Authorization: `Bearer ${session?.access_token}`
         },
         body: JSON.stringify({
           id: supabaseUser.id,
@@ -40,15 +40,12 @@ export const AuthProvider = ({ children }) => {
           name: name || supabaseUser.user_metadata?.name || 'User'
         })
       })
-
-      
-
     } catch (err) {
-      console.error("User sync error:", err)
+      console.error('User sync error:', err)
     }
   }
+
   const signup = async (email, password, name) => {
-    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -56,12 +53,13 @@ export const AuthProvider = ({ children }) => {
         data: { name }
       }
     })
-    
+
     if (error) throw error
+
     if (data.user) {
-      
       await syncUserToBackend(data.user, name)
     }
+
     return data
   }
 
@@ -70,12 +68,15 @@ export const AuthProvider = ({ children }) => {
       email,
       password
     })
+
     if (error) throw error
+
     return data
   }
 
   const logout = async () => {
     const { error } = await supabase.auth.signOut()
+
     if (error) throw error
   }
 
@@ -85,7 +86,7 @@ export const AuthProvider = ({ children }) => {
     isLoggedIn: !!user,
     signup,
     login,
-    logout,
+    logout
   }
 
   return (

@@ -11,7 +11,7 @@ const Signup = () => {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { signup, isLoggedIn, loading: authLoading } = useAuth()
+  const { signup, login, isLoggedIn, loading: authLoading } = useAuth()
   const navigate = useNavigate()
 
   const handleChange = (e) => {
@@ -30,8 +30,14 @@ const Signup = () => {
     setError('')
     setLoading(true)
     try {
+      const validationError = validate()
+      if (validationError) throw new Error(validationError)
+
+      await signup(form.email, form.password, form.name)
       await login(form.email, form.password)
+
       const pendingToken = localStorage.getItem('pendingInviteToken')
+
       if (pendingToken) {
         localStorage.removeItem('pendingInviteToken')
         navigate(`/join/${pendingToken}`)
@@ -39,7 +45,7 @@ const Signup = () => {
         navigate('/')
       }
     } catch (err) {
-      setError(err.message || 'Invalid email or password')
+      setError(err.message || 'Failed to create account')
     } finally {
       setLoading(false)
     }
@@ -54,7 +60,7 @@ const Signup = () => {
       <div className="w-full max-w-sm">
 
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-medium text-gray-900 dark:text-white">TripSync</h1>
+          <h1 className="text-2xl font-medium text-gray-900 dark:text-white">TripNest</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create your account</p>
         </div>
 
