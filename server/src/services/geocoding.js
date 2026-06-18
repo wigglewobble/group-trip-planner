@@ -6,11 +6,24 @@ const geocodeAddress = async (address, destination) => {
 
   const res = await fetch(url, {
     headers: {
-      'User-Agent': 'TripSync/1.0 (group trip planner app)'
+      'User-Agent': 'TripNest/1.0'
     }
   })
 
-  const data = await res.json()
+  if (!res.ok) {
+    console.error(`Nominatim error ${res.status} for "${query}"`)
+    return null
+  }
+
+  const text = await res.text()
+
+  let data
+  try {
+    data = JSON.parse(text)
+  } catch {
+    console.error(`Non-JSON response from Nominatim for "${query}"`)
+    return null
+  }
 
   if (!data || data.length === 0) {
     return null
