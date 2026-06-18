@@ -11,7 +11,10 @@ const Layout = ({ children }) => {
         {children}
       </main>
 
-      <Footer />
+      <div className="pb-20 md:pb-0">
+        <Footer />
+      </div>
+
       <BottomNav />
     </div>
   )
